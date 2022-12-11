@@ -1,0 +1,15 @@
+Questions:
+
+BOM level, tum insert'ler yapildiktan sonra hepsi beraber mi hesaplanmali
+yoksa, her eleman insert edilirken update mi edilmeli? 
+Bunlarin costlari duruma gore biri digerinden iyi olabiliyor.
+Ikisinin de implementation'i olsun mu?
+Su an hepsininkini tek query ile hesaplayan implementation'i yaptim.
+
+
+Initial Data'yi database'e yuklerken, kolay olsun diye:
+Once excel'e elle giriyorum datayi, bunlar gross requirement, item id'ler bom bilgileri etc.
+Daha sonra excel'i okuyup ram'e (heap mem) aktariyorum
+En son olarak bunu database'deki tablolara yerlestiriyorum.
+
+Bu sadece initial datayi koyarken mecvut, bunun disinda her sey sql ile yapiliyor.
