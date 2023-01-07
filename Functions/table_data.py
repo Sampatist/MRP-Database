@@ -101,23 +101,23 @@ def delete_period(Period_ID):
     sql_write(sql)
 
 # Insert a new record into the item-period table
-def insert_item_period(Item_ID, Period, Gross_Requirement, Scheduled_Receipt, Projected_Inventory, Net_Requirement, Planned_Order_Receipt, Planned_Order_Release):
-  if count_key('Item_Period', 'Item_ID', Item_ID, 'Period', Period) == 0:
+def insert_item_period(Item_ID, Period_ID, Gross_Requirement, Scheduled_Receipt, Projected_Inventory, Net_Requirement, Planned_Order_Receipt, Planned_Order_Release):
+  if count_key('Item_Period', 'Item_ID', Item_ID, 'Period_ID', Period_ID) == 0:
     print('Item_Period already exists')
   else:
     sql = f'''
       INSERT INTO Item_Period
-      VALUES ({Item_ID}, {Period}, {Gross_Requirement}, {Scheduled_Receipt}, {Projected_Inventory}, {Net_Requirement}, {Planned_Order_Receipt}, {Planned_Order_Release});
+      VALUES ({Item_ID}, {Period_ID}, {Gross_Requirement}, {Scheduled_Receipt}, {Projected_Inventory}, {Net_Requirement}, {Planned_Order_Receipt}, {Planned_Order_Release});
     '''
     sql_write(sql)
 
 # Delete a record from the item-period table
 def delete_item_period(Item_ID, Period):
-  if count_key('Item_Period', 'Item_ID', Item_ID, 'Period', Period) == 0:
+  if count_key('Item_Period', 'Item_ID', Item_ID, 'Period_ID', Period_ID) == 0:
     print('Item_Period does not exist')
   else:
     sql = f'''
       DELETE FROM Item_Period
-      WHERE Item_ID = {Item_ID} AND Period = {Period};
+      WHERE Item_ID = {Item_ID} AND Period_ID = {Period_ID};
     '''
     sql_write(sql)

@@ -41,29 +41,29 @@ def sql_calc_mrp_planned_order_receipt(bom_level, period_ID):
         WHERE BOM_Level = {bom_level}
     ), 
     t_Projected_Inventory_without_order AS (
-        SELECT IP.Item_ID, IP.Period,
-            (CASE WHEN IP.Period = 1
+        SELECT IP.Item_ID, IP.Period_ID,
+            (CASE WHEN IP.Period_ID = 1
                 THEN IP.Scheduled_Receipt - IP.Gross_Requirement + I.Current_Inventory
-                ELSE IP.Scheduled_Receipt - IP.Gross_Requirement + (SELECT Projected_Inventory FROM Item_Period WHERE Item_ID = IP.Item_ID AND Period = IP.Period - 1)
+                ELSE IP.Scheduled_Receipt - IP.Gross_Requirement + (SELECT Projected_Inventory FROM Item_Period WHERE Item_ID = IP.Item_ID AND Period_ID = IP.Period_ID - 1)
             END) AS Projected_Inventory_without_order, 
             I.Lead_Time, I.Lot_Size
         FROM Item AS I
         JOIN Item_Period AS IP 
         ON I.Item_ID = IP.Item_ID
-        WHERE I.Item_ID IN level_i_items AND IP.Period = {period_ID}
+        WHERE I.Item_ID IN level_i_items AND IP.Period_ID = {period_ID}
     ),
     t_Net_Requirement AS (
-        SELECT Item_ID, Period, 
+        SELECT Item_ID, Period_ID, 
             Projected_Inventory_without_order,
             MAX(-Projected_Inventory_without_order,0) AS Net_Requirement,
             Lead_Time, Lot_Size
         FROM t_Projected_Inventory_without_order
     ),
     t_Planned_Order_Receipt AS (
-        SELECT Item_ID, Period, 
+        SELECT Item_ID, Period_ID, 
             Projected_Inventory_without_order,
             Net_Requirement,
-            (CASE WHEN Period - Lead_Time > 0 AND Net_Requirement > 0 
+            (CASE WHEN Period_ID - Lead_Time > 0 AND Net_Requirement > 0 
                 THEN MAX(Lot_Size, Net_Requirement)
                 ELSE 0
             END) AS Planned_Order_Receipt,
@@ -71,7 +71,7 @@ def sql_calc_mrp_planned_order_receipt(bom_level, period_ID):
     FROM t_Net_Requirement
     ),
     t_Projected_Inventory_after_order AS (
-        SELECT Item_ID, Period,
+        SELECT Item_ID, Period_ID,
             Projected_Inventory_without_order + Planned_Order_Receipt AS Projected_Inventory_after_order,
             Net_Requirement,
             Planned_Order_Receipt
@@ -82,7 +82,7 @@ def sql_calc_mrp_planned_order_receipt(bom_level, period_ID):
             Net_Requirement = PIAO.Net_Requirement,
             Planned_Order_Receipt = PIAO.Planned_Order_Receipt
         FROM t_Projected_Inventory_after_order AS PIAO
-        WHERE IP.Item_ID = PIAO.Item_ID AND IP.Period = PIAO.Period;
+        WHERE IP.Item_ID = PIAO.Item_ID AND IP.Period_ID = PIAO.Period_ID;
     '''
     sql_write(sql)
 
@@ -96,7 +96,7 @@ def sql_calc_mrp_planned_order_releases(bom_level):
         WHERE BOM_Level = {bom_level}
     ), 
     temp AS (
-        SELECT I.Item_ID, IP.Period, IP.Planned_Order_Receipt, I.Lead_Time
+        SELECT I.Item_ID, IP.Period_ID, IP.Planned_Order_Receipt, I.Lead_Time
         FROM Item AS I
         JOIN Item_Period AS IP
         ON I.Item_ID = IP.Item_ID
@@ -105,7 +105,7 @@ def sql_calc_mrp_planned_order_releases(bom_level):
     UPDATE Item_Period AS IP
         SET Planned_Order_Release = t.Planned_Order_Receipt 
         FROM temp AS t
-        WHERE IP.Item_ID = t.Item_ID AND IP.Period = t.Period - t.Lead_Time;
+        WHERE IP.Item_ID = t.Item_ID AND IP.Period_ID = t.Period_ID - t.Lead_Time;
     '''
     sql_write(sql)
 
@@ -117,8 +117,8 @@ def sql_calc_mrp(bom_level):
     '''
     period_max = sql_read(sql)[0][0]
 
-    for period in range(1, period_max + 1):
-        sql_calc_mrp_planned_order_receipt(bom_level, period)
+    for period_ID in range(1, period_max + 1):
+        sql_calc_mrp_planned_order_receipt(bom_level, period_ID)
 
     sql_calc_mrp_planned_order_releases(bom_level)
 
@@ -137,7 +137,7 @@ def sql_calc_component_gross_requirement(bom_level):
         FROM BOM AS B
         JOIN Item_Period AS IP0
         ON B.Item_ID = IP0.Item_ID
-        WHERE IP1.Item_ID = B.Component_ID AND IP0.Period = IP1.Period AND B.Item_ID IN level_i_items;
+        WHERE IP1.Item_ID = B.Component_ID AND IP0.Period_ID = IP1.Period_ID AND B.Item_ID IN level_i_items;
     '''
     sql_write(sql)
 
